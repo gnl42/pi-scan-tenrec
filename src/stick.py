@@ -54,7 +54,7 @@ class Stick:
           "Mount",
           dbus_interface="org.freedesktop.UDisks2.Filesystem")
         mount_point = mount([])
-    except Exception, e:
+    except Exception as e:
       print 'Failed to mount: ', e
     return mount_point
 
@@ -71,7 +71,7 @@ class Stick:
                               'MountPoints')
       if len(old_mounts) > 0:
         mount_point = bytearray(old_mounts[0]).decode('utf-8')
-    except Exception, e:
+    except Exception as e:
       print 'Failed to get/parse mount point', e
     return mount_point
 
@@ -88,7 +88,7 @@ class Stick:
           "Unmount",
           dbus_interface="org.freedesktop.UDisks2.Filesystem")
         unmount({'force': should_force})
-    except Exception, e:
+    except Exception as e:
       print 'Failed to unmount: ', e
 
 def main():
