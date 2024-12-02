@@ -25,7 +25,7 @@ def search():
         if busType == 'usb':
           result.append(Stick(key))
     except Exception as e:
-	  print ('Problem finding USB drive: ', e)
+      print ('Problem finding USB drive: ', e)
       pass
   return result
 
