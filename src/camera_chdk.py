@@ -80,7 +80,7 @@ class Camera:
     self.position = 'odd'
     self.debugCount = 3
     self.debugFail = ''
-    
+
     # TODO Warning about unsupported cameras?
 
   def log(self, message):
@@ -136,7 +136,7 @@ class Camera:
   def prepare_whitebalance(self):
     self.message = 'Failed to set white balance'
     self.device.lua_execute("set_prop(require('propcase').WB_MODE, " + str(self.whitebalance) + ");sleep(50);", do_return=False)
-    
+
   def prepare_flash(self):
     self.message = 'Failed to disable flash'
     #self.device.lua_execute(
@@ -151,11 +151,11 @@ class Camera:
   def prepare_quality(self):
     self.message = 'Failed to set quality'
     self.device.lua_execute("set_prop(require('propcase').QUALITY, 0);sleep(50);", do_return=False)
-    
+
   def prepare_resolution(self):
     self.message = 'Failed to set resolution'
     self.device.lua_execute("set_prop(require('propcase').RESOLUTION, 0);sleep(50);", do_return=False)
-  
+
   ###########################################################################
 
   def is_connected(self):
@@ -192,7 +192,7 @@ class Camera:
     except Exception as e:
       self.log('Failed to unlock focus: ' + str(e.args) + '\n' + traceback.format_exc())
     return success
-    
+
   def connect(self):
     success = False
     try:
@@ -230,7 +230,7 @@ class Camera:
     if choice in shutterToFactor:
       factor = shutterToFactor[choice]
     return factor
-  
+
   ###########################################################################
 
   def capture(self, filename):
@@ -329,7 +329,7 @@ class Camera:
         end
         """)(img_data)
     return result
-  
+
   ###########################################################################
 
   def getRomLog(self, position, path):
@@ -374,7 +374,7 @@ class Camera:
       self.log('Failed to beep: ' + str(e) + ' ' + str(e.args) + '\n' + traceback.format_exc())
 
   ###########################################################################
-      
+
   def turnOff(self):
     try:
       if self.is_connected():
@@ -403,14 +403,14 @@ class Camera:
 
   #def setConfig(self, config):
   #  configText = JSON.stringify(config)
-    
-  
+
+
   ###########################################################################
 
 def main():
   cameras = search()
   for camera in cameras:
     camera.setup()
-  print cameras
+  print (cameras)
 
 #main()

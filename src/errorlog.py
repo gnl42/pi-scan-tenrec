@@ -13,7 +13,7 @@ def write(text):
   global logfile
   if logfile is not None:
     line = time.strftime('%Y-%m-%d %H:%M:%S') + ' -- ' + text + '\n'
-    print line
+    print (line)
     logfile.write(line)
     logfile.flush()
 

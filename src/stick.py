@@ -25,6 +25,7 @@ def search():
         if busType == 'usb':
           result.append(Stick(key))
     except Exception as e:
+	  print ('Problem finding USB drive: ', e)
       pass
   return result
 
@@ -55,7 +56,7 @@ class Stick:
           dbus_interface="org.freedesktop.UDisks2.Filesystem")
         mount_point = mount([])
     except Exception as e:
-      print 'Failed to mount: ', e
+      print ('Failed to mount: ', e)
     return mount_point
 
   def get_mount_point(self):
@@ -72,7 +73,7 @@ class Stick:
       if len(old_mounts) > 0:
         mount_point = bytearray(old_mounts[0]).decode('utf-8')
     except Exception as e:
-      print 'Failed to get/parse mount point', e
+      print ('Failed to get/parse mount point', e)
     return mount_point
 
   def unmount(self, should_force):
@@ -89,22 +90,22 @@ class Stick:
           dbus_interface="org.freedesktop.UDisks2.Filesystem")
         unmount({'force': should_force})
     except Exception as e:
-      print 'Failed to unmount: ', e
+      print ('Failed to unmount: ', e)
 
 def main():
   mount_point = None
   sticks = search()
   if len(sticks) == 0:
-    print 'No Stick Found'
+    print ('No Stick Found')
   elif len(sticks) > 1:
     print len(sticks), ' sticks found. Try unplugging one.'
   else:
     mount_point = sticks[0].get_mount_point()
     if mount_point is None:
       mount_point = sticks[0].mount()
-      print 'Mounted at: ' + mount_point
+      print ('Mounted at: ' + mount_point)
     else:
-      print 'Unmounting. Was mounted at: ' + mount_point
+      print ('Unmounting. Was mounted at: ' + mount_point)
       sticks[0].unmount(True)
 
 #main()
