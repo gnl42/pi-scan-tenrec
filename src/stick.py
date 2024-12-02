@@ -98,7 +98,7 @@ def main():
   if len(sticks) == 0:
     print ('No Stick Found')
   elif len(sticks) > 1:
-    print len(sticks), ' sticks found. Try unplugging one.'
+    print (len(sticks), ' sticks found. Try unplugging one.')
   else:
     mount_point = sticks[0].get_mount_point()
     if mount_point is None:
