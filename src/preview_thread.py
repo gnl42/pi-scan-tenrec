@@ -1,6 +1,6 @@
 from threading import Thread, Event
 from PIL import Image as PillowImage
-import cStringIO as StringIO
+from io import BytesIO as StringIO
 from kivy.core.image import ImageData as CoreImageData
 from kivy.graphics.texture import Texture
 #from jpegtran import JPEGImage
@@ -129,4 +129,4 @@ class PreviewThread:
     except Exception as e:
       errorlog.write('Failed to process: ' + result.message + ': ' + str(e) + ': ' + str(e.args))
     return result
-  
+
