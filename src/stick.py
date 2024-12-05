@@ -4,6 +4,7 @@ def search():
   bus = dbus.SystemBus()
   ud_manager_obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2')
   om = dbus.Interface(ud_manager_obj, 'org.freedesktop.DBus.ObjectManager')
+  result = []
   try:
     for k,v in om.GetManagedObjects().items():
       drive_info = v.get('org.freedesktop.UDisks2.Drive', {})
