@@ -2,31 +2,16 @@ import dbus
 
 def search():
   bus = dbus.SystemBus()
-  udisks = dbus.Interface(
-    bus.get_object('org.freedesktop.UDisks2',
-                   '/org/freedesktop/UDisks2'),
-    'org.freedesktop.DBus.ObjectManager')
-  listDevices = udisks.get_dbus_method('GetManagedObjects')
-  result = []
-  for key, value in listDevices().items():
-    try:
-      if ('org.freedesktop.UDisks2.Block' in value and
-          'org.freedesktop.UDisks2.Filesystem' in value):
-        block = value['org.freedesktop.UDisks2.Block']
-        drive = dbus.Interface(
-          bus.get_object('org.freedesktop.UDisks2',
-                         block['Drive']),
-          'org.freedesktop.UDisks2.Drive')
-        driveprop = dbus.Interface(
-          drive,
-          'org.freedesktop.DBus.Properties')
-        busType = driveprop.Get('org.freedesktop.UDisks2.Drive',
-                                'ConnectionBus')
-        if busType == 'usb':
-          result.append(Stick(key))
-    except Exception as e:
-      print ('Problem finding USB drive: ', e)
-      pass
+  ud_manager_obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2')
+  om = dbus.Interface(ud_manager_obj, 'org.freedesktop.DBus.ObjectManager')
+  try:
+    for k,v in om.GetManagedObjects().items():
+      drive_info = v.get('org.freedesktop.UDisks2.Drive', {})
+      if drive_info.get('ConnectionBus') == 'usb' and drive_info.get('Removable'):
+        result.append(Stick(key))
+  except Exception as e:
+    print ('Problem finding USB drive: ', e)
+    pass
   return result
 
 def searchAndUnmount(shouldForce):
