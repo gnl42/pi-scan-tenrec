@@ -9,7 +9,7 @@ def search():
     for k,v in om.GetManagedObjects().items():
       drive_info = v.get('org.freedesktop.UDisks2.Drive', {})
       if drive_info.get('ConnectionBus') == 'usb' and drive_info.get('Removable'):
-        result.append(Stick(key))
+        result.append(Stick(k))
   except Exception as e:
     print ('Problem finding USB drive: ', e)
     pass
