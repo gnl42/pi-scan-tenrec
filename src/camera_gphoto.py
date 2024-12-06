@@ -57,8 +57,12 @@ class GphotoInfo:
 def search():
   result = []
   try:
-    cameraList = subprocess.check_output(['gphoto2', '--auto-detect'])
-    result = parseCameras(cameraList)
+    cameraList = subprocess.run(['gphoto2', '--auto-detect'],
+                                capture_output=True, text=True)
+    if cameraList.returncode != 0:
+      raise CalledProcessError(cameraList.returncode, cameraList.args)
+
+    result = parseCameras(cameraList.stdout)
   except Exception as e:
     errorlog.write('Failed to search: ' + str(e.args) + '\n' + traceback.format_exc())
   return result
@@ -90,7 +94,7 @@ class Camera:
     self.position = 'odd'
     self.debugCount = 3
     self.debugFail = ''
-    
+
     # TODO Warning about unsupported cameras?
 
   def log(self, message):
@@ -136,7 +140,7 @@ class Camera:
   def prepare_iso(self):
     self.message = 'Failed to set ISO'
     setConfig(self.port, '/main/imgsettings/iso', '100')
-  
+
   # Set whitebalance to Tungsten
   def prepare_whitebalance(self):
     self.message = 'Failed to set white balance'
@@ -153,7 +157,7 @@ class Camera:
   def prepare_resolution(self):
     self.message = 'Failed to set resolution'
     setConfig(self.port, '/main/imgsettings/imagesize', 'Large')
-  
+
   ###########################################################################
 
   def is_connected(self):
@@ -184,7 +188,7 @@ class Camera:
     except Exception as e:
       self.log('Failed to refocus: ' + str(e.args) + '\n' + traceback.format_exc())
     return success
-    
+
   def connect(self):
     success = False
     try:
@@ -218,7 +222,7 @@ class Camera:
     if choice in shutterToFactor:
       factor = shutterToFactor[choice]
     return factor
-  
+
   ###########################################################################
 
   def capture(self, filename):
@@ -254,7 +258,7 @@ class Camera:
       self.log('Failed to beep: ' + str(e) + ' ' + str(e.args) + '\n' + traceback.format_exc())
 
   ###########################################################################
-      
+
   def turnOff(self):
     try:
       if self.is_connected():
@@ -265,26 +269,36 @@ class Camera:
   ###########################################################################
 
 def getConfig(usb_port, key):
-  raw = subprocess.check_output(['gphoto2',
-                                 '--port=' + usb_port,
-                                 '--get-config=' + key])
+  raw = subprocess.run(['gphoto2',
+                            '--port=' + usb_port,
+                            '--get-config=' + key],
+                            capture_output=True, text=True)
+  if raw.returncode != 0:
+      raise CalledProcessError(raw.returncode, raw.args)
+
   test = re.compile('Current: ([^\n]+)')
-  match = test.search(raw)
+  match = test.search(raw.stdout)
   if match is not None:
     return match.group(1)
   else:
     return None
 
 def setConfig(usb_port, key, value):
-  raw = subprocess.check_output(['gphoto2',
-                                 '--port=' + usb_port,
-                                 '--set-config=' + key + '=' + value])
+  raw = subprocess.run(['gphoto2',
+                            '--port=' + usb_port,
+                            '--set-config=' + key + '=' + value],
+                            capture_output=True, text=True)
+  if raw.returncode != 0:
+      raise CalledProcessError(raw.returncode, raw.args)
   return None
 
 def captureAndDownload(usb_port, key):
-  raw = subprocess.check_output(['gphoto2',
-                                 '--port=' + usb_port,
-                                 '--capture-image-and-download',
-                                 '--no-keep',
-                                 '--force-overwrite',
-                                 '--filename=' + key + '.%C'])
+  raw = subprocess.run(['gphoto2',
+                            '--port=' + usb_port,
+                            '--capture-image-and-download',
+                            '--no-keep',
+                            '--force-overwrite',
+                            '--filename=' + key + '.%C'],
+                            capture_output=True, text=True)
+  if raw.returncode != 0:
+      raise CalledProcessError(raw.returncode, raw.args)
