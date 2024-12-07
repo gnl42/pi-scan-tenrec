@@ -13,7 +13,7 @@ import camera_thread, stick, camera_chdk, camera_gphoto, preview, errorlog, prev
 import os, json, string, re, traceback, errno
 import wiringpi
 
-version = '1.5'
+version = '2.0'
 debug = False
 
 odd = None
