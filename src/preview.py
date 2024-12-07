@@ -39,7 +39,7 @@ class Preview:
         root.remove_widget(root.children[-1])
       while len(root.children) < len(self.result.data):
         root.add_widget(Image())
-      for i in xrange(0, len(self.result.data)):
+      for i in range(0, len(self.result.data)):
         current = root.children[i]
         if len(self.textures) <= i:
           self.textures.append(Texture.create_from_data(self.result.data[i]))

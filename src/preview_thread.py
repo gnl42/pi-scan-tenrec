@@ -81,7 +81,7 @@ class PreviewThread:
     try:
       # Load full image from raw binary representation
       result.message = 'Failed to load image'
-      if isinstance(raw, basestring):
+      if isinstance(raw, str):
         full = PillowImage.open(raw + '.jpg')
       else:
         stream = StringIO.StringIO(raw.decode('utf8'))
@@ -108,8 +108,8 @@ class PreviewThread:
       # Populate the cropped core images for later preview
       result.data = []
       result.sizes = []
-      for y in xrange(rowCount-1, -1, -1):
-        for x in xrange(result.columnCount-1, -1, -1):
+      for y in range(rowCount-1, -1, -1):
+        for x in range(result.columnCount-1, -1, -1):
           result.message = 'Failed to crop base image'
           #width = min(result.width - x*2000, 2000)
           #height = min(result.height - y*2000, 2000)
