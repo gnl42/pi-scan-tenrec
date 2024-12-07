@@ -20,6 +20,7 @@ odd = None
 even = None
 config = {}
 gphoto = False
+ssh_started = False
 
 #########################################################################################
 
@@ -421,7 +422,8 @@ class StartScreen(Screen):
     handleKeyPress(key,
                    { '1': self.beginAction,
                      '2': self.turnOffCameras,
-                     '9': self.quitAction })
+                     '9': self.quitAction,
+                     's': self.startSsh })
 
   def beginAction(self):
     self.manager.transition.direction = 'left'
@@ -430,6 +432,10 @@ class StartScreen(Screen):
   def quitAction(self):
     os.system('killall run-pi-scan.sh python')
     exit()
+
+  def startSsh(self):
+      os.system('sudo systemctl start ssh')
+      ssh_started = True
 
   def turnOffCameras(self):
     if odd.camera is not None:
@@ -455,7 +461,11 @@ class ConfigureDiskScreen(Screen):
       #self.manager.mountPoint = string.strip(.encode('ascii'), '\0')
       if mountPoint is None:
         mountPoint = sticks[0].mount()
-      #self.manager.mountPoint = 'test'
+
+      if ssh_started:
+# Use sftp instead of USB drive
+        self.manager.mountPoint = 'test'
+
       if mountPoint is None:
         self.manager.mountPoint = None
         self.diskStatus.text = 'Could not mount drive. Try removing and re-inserting it.'
