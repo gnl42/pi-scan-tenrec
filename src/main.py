@@ -20,7 +20,6 @@ odd = None
 even = None
 config = {}
 gphoto = False
-ssh_started = False
 
 #########################################################################################
 
@@ -422,8 +421,7 @@ class StartScreen(Screen):
     handleKeyPress(key,
                    { '1': self.beginAction,
                      '2': self.turnOffCameras,
-                     '9': self.quitAction,
-                     's': self.startSsh })
+                     '9': self.quitAction })
 
   def beginAction(self):
     self.manager.transition.direction = 'left'
@@ -432,10 +430,6 @@ class StartScreen(Screen):
   def quitAction(self):
     os.system('killall run-pi-scan.sh python')
     exit()
-
-  def startSsh(self):
-      os.system('sudo systemctl start ssh')
-      ssh_started = True
 
   def turnOffCameras(self):
     if odd.camera is not None:
@@ -449,61 +443,77 @@ class StartScreen(Screen):
 
 class ConfigureDiskScreen(Screen):
   waitCount = NumericProperty(0.0)
+  ssh_started = False
 
   def update(self, dt):
-    sticks = stick.search()
-    if len(sticks) == 0:
-      self.diskStatus.text = '[color=ff3333]No Storage Found.[/color] Insert removable storage to continue (USB drive or SD card).'
-      self.diskNext.disabled = True
-      self.spinner.opacity = 1.0
-    elif len(sticks) == 1:
-      mountPoint = sticks[0].get_mount_point()
-      #self.manager.mountPoint = string.strip(.encode('ascii'), '\0')
-      if mountPoint is None:
-        mountPoint = sticks[0].mount()
-
-      if ssh_started:
-# Use sftp instead of USB drive
+      # Use sftp instead of USB drive
+      print("ssh_started: ", self.ssh_started)
+      if self.ssh_started:
         self.manager.mountPoint = 'test'
-
-      if mountPoint is None:
-        self.manager.mountPoint = None
-        self.diskStatus.text = 'Could not mount drive. Try removing and re-inserting it.'
-        self.diskNext.disabled = True
-        self.spinner.opacity = 1.0
-        self.upgradeButton.opacity = 0.0
-        self.upgradeButton.disabled = True
-      else:
-        self.manager.mountPoint = string.strip(mountPoint.encode('ascii'), '\0')
+        mountPoint = 'test'
+        self.diskStatus.text = 'using ssh/test folder'
+        print(self.diskStatus.text)
         failMessage = self.makeDirs()
         if failMessage is None:
           self.diskStatus.text = 'Storage Found. Click next to continue.'
           self.diskNext.disabled = False
-          self.spinner.opacity = 0.0
-          if self.getUpgrade() is not None:
-            self.upgradeButton.opacity = 1.0
-            self.upgradeButton.disabled = False
-          else:
+
+      else:
+        sticks = stick.search()
+        if len(sticks) == 0:
+          self.diskStatus.text = '[color=ff3333]No Storage Found.[/color] Insert removable storage to continue (USB drive or SD card).'
+          self.diskNext.disabled = True
+          self.spinner.opacity = 1.0
+        elif len(sticks) == 1:
+          mountPoint = sticks[0].get_mount_point()
+          #self.manager.mountPoint = string.strip(.encode('ascii'), '\0')
+          if mountPoint is None:
+            mountPoint = sticks[0].mount()
+
+          if mountPoint is None:
+            self.manager.mountPoint = None
+            self.diskStatus.text = 'Could not mount drive. Try removing and re-inserting it.'
+            self.diskNext.disabled = True
+            self.spinner.opacity = 1.0
             self.upgradeButton.opacity = 0.0
             self.upgradeButton.disabled = True
+          else:
+            self.manager.mountPoint = string.strip(mountPoint.encode('ascii'), '\0')
+            failMessage = self.makeDirs()
+            if failMessage is None:
+              self.diskStatus.text = 'Storage Found. Click next to continue.'
+              self.diskNext.disabled = False
+              self.spinner.opacity = 0.0
+              if self.getUpgrade() is not None:
+                self.upgradeButton.opacity = 1.0
+                self.upgradeButton.disabled = False
+              else:
+                self.upgradeButton.opacity = 0.0
+                self.upgradeButton.disabled = True
+            else:
+              self.diskStatus.text = 'Storage Error: ' + failMessage
+              self.diskNext.disabled = True
+              self.spinner.opacity = 1.0
+              self.upgradeButton.opacity = 0.0
+              self.upgradeButton.disabled = True
         else:
-          self.diskStatus.text = 'Storage Error: ' + failMessage
+          self.diskStatus.text = '[color=ff3333]Multiple Drives Found.[/color] Disconnect all but one drive to continue.'
           self.diskNext.disabled = True
           self.spinner.opacity = 1.0
           self.upgradeButton.opacity = 0.0
           self.upgradeButton.disabled = True
-    else:
-      self.diskStatus.text = '[color=ff3333]Multiple Drives Found.[/color] Disconnect all but one drive to continue.'
-      self.diskNext.disabled = True
-      self.spinner.opacity = 1.0
-      self.upgradeButton.opacity = 0.0
-      self.upgradeButton.disabled = True
 
   def keyPress(self, key):
     handleKeyPress(key,
                    { '1': self.diskNextAction,
                      '9': self.backAction,
-                     '2': self.upgradeAction })
+                     '2': self.upgradeAction,
+                     's': self.startSsh })
+
+  def startSsh(self):
+      os.system('sudo systemctl start ssh')
+      print('ssh started')
+      self.ssh_started = True
 
   def on_pre_enter(self):
     try:
