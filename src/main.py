@@ -57,7 +57,7 @@ class CameraSide:
     # Set the filename we will later save to using .jpg for CHDK cameras
     self.filename = newFilename + '.jpg'
     self.scan = None
-    self.code = camera_thread.WAITING 
+    self.code = camera_thread.WAITING
     self.message = 'Lost Connection to Camera'
     # Pass in a .jpg-less filename for gphoto cameras because they add
     # on .jpg automatically.
@@ -65,7 +65,7 @@ class CameraSide:
 
   def save(self, mountPoint):
     #print 'Camera: ', self.position, ' saving image: ', self.filename
-    if self.raw is not None and not isinstance(self.raw, basestring) and self.filename is not None and self.code == camera_thread.COMPLETE:
+    if self.raw is not None and not isinstance(self.raw, str) and self.filename is not None and self.code == camera_thread.COMPLETE:
       fp = open(mountPoint + self.filename, 'w')
       fp.write(self.raw)
       fp.close()
@@ -168,7 +168,7 @@ def configureSides():
     swapSides()
   else:
     updateConfig()
-  
+
 #########################################################################################
 
 def swapSides():
@@ -305,7 +305,7 @@ class OptionSelect(RelativeLayout):
 
   def done(self):
     try:
-      odd.config[self.key] = self.oddControl.get() 
+      odd.config[self.key] = self.oddControl.get()
       even.config[self.key] = self.evenControl.get()
       odd.saveConfig(config)
       even.saveConfig(config)
@@ -620,7 +620,7 @@ class ConfigureCameraScreen(Screen):
       self.zoomButton.opacity = 1.0
       self.shutterButton.opacity = 1.0
       self.debugButton.opacity = 1.0
-        
+
   def keyPress(self, key):
     handleKeyPress(key,
                    { '1': self.nextAction,
@@ -789,7 +789,7 @@ class PreviewInside(GridLayout):
 #########################################################################################
 
 class FocusCameraScreen(Screen):
-  
+
   def update(self, dt):
     checkForDisconnected(self.manager)
     if gphoto:
@@ -920,7 +920,7 @@ class CaptureWaitScreen(Screen):
                    { '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
 class PreviewWaitScreen(Screen):
 
@@ -955,13 +955,13 @@ class PreviewWaitScreen(Screen):
                    { '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
 #########################################################################################
 
 class ZoomCameraScreen(Screen):
   preview = ObjectProperty(None, noneallowed=True)
-  
+
   def update(self, dt):
     self.select.update(dt)
 
@@ -1170,7 +1170,7 @@ class CaptureFailScreen(Screen):
                      '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
 #########################################################################################
 
@@ -1196,7 +1196,7 @@ class DebugScreen(Screen):
                      '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
   def updateSide(self, found, side, status, log, message):
     if found:
@@ -1260,7 +1260,7 @@ class DebugScreen(Screen):
       side.message = 'Debug log saved to ' + side.position + '-rom.log'
     except Exception as e:
       side.message = 'Could not get debug log: ' + side.camera.message + ': ' + str(e)
-    
+
 #########################################################################################
 
 hasCrashed = False
@@ -1335,7 +1335,7 @@ class ScanApp(App):
     except Exception as e:
       handleCrash(e)
     return True
-    
+
   def on_key_down(self, window, scancode, codepoint, key, other):
     if not self.handlingKey:
       self.handlingKey = True
@@ -1369,4 +1369,4 @@ if __name__ == '__main__':
   odd.start()
   even.start()
   ScanApp().run()
-    
+
