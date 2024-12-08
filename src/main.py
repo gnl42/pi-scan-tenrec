@@ -447,16 +447,20 @@ class ConfigureDiskScreen(Screen):
 
   def update(self, dt):
       # Use sftp instead of USB drive
-      print("ssh_started: ", self.ssh_started)
       if self.ssh_started:
-        self.manager.mountPoint = 'captured'
-        mountPoint = 'test'
-        self.diskStatus.text = 'using ssh/test folder'
+        mountPoint = 'captured'
+        self.manager.mountPoint = mountPoint
         print(self.diskStatus.text)
         failMessage = self.makeDirs()
         if failMessage is None:
-          self.diskStatus.text = 'Storage Found. Click next to continue.'
+          self.diskStatus.text = 'Using ssh with "captured" folder'
           self.diskNext.disabled = False
+        else:
+          self.diskStatus.text = 'Storage Error: ' + failMessage
+          self.diskNext.disabled = True
+          self.spinner.opacity = 1.0
+          self.upgradeButton.opacity = 0.0
+          self.upgradeButton.disabled = True
 
       else:
         sticks = stick.search()
@@ -527,7 +531,7 @@ class ConfigureDiskScreen(Screen):
   def makeDirs(self):
     errorMessage = None
     try:
-      os.mkdir(self.manager.mountPoint + '/debug')
+      os.makedirs(self.manager.mountPoint + '/debug')
     except OSError as e:
       errorMessage = self.makeDirError(e)
     if errorMessage is None:
