@@ -13,12 +13,12 @@ sudo mv mnt/etc/ld.so.preload  mnt/etc/ld.so.preload.backup
 
 # Setup boot configuration
 
-sudo cp files/config.txt mnt/boot/config.txt
+sudo cp files/config.txt mnt/boot/firmware/config.txt
 
 # Read only filesystem
 
 sudo cp files/mount_unionfs mnt/usr/local/bin/mount_unionfs
-sudo cp files/fstab mnt/etc/fstab 
+sudo cp files/fstab mnt/etc/fstab
 
 
 # udisks2 permissions
