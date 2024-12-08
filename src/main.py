@@ -13,7 +13,7 @@ import camera_thread, stick, camera_chdk, camera_gphoto, preview, errorlog, prev
 import os, json, string, re, traceback, errno
 import wiringpi
 
-version = '2.0'
+version = '1.9'
 debug = False
 
 odd = None
@@ -449,7 +449,7 @@ class ConfigureDiskScreen(Screen):
       # Use sftp instead of USB drive
       print("ssh_started: ", self.ssh_started)
       if self.ssh_started:
-        self.manager.mountPoint = 'test'
+        self.manager.mountPoint = 'captured'
         mountPoint = 'test'
         self.diskStatus.text = 'using ssh/test folder'
         print(self.diskStatus.text)
