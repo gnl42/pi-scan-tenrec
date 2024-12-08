@@ -450,10 +450,9 @@ class ConfigureDiskScreen(Screen):
       if self.ssh_started:
         mountPoint = 'captured'
         self.manager.mountPoint = mountPoint
-        print(self.diskStatus.text)
         failMessage = self.makeDirs()
         if failMessage is None:
-          self.diskStatus.text = 'Using ssh with "captured" folder'
+          self.diskStatus.text = 'Using ssh with "captured" folder for storage'
           self.diskNext.disabled = False
         else:
           self.diskStatus.text = 'Storage Error: ' + failMessage
