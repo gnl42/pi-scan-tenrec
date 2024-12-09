@@ -66,7 +66,7 @@ class CameraSide:
 
   def save(self, mountPoint):
     #print 'Camera: ', self.position, ' saving image: ', self.filename
-    if self.raw is not None and not isinstance(self.raw, basestring) and self.filename is not None and self.code == camera_thread.COMPLETE:
+    if self.raw is not None and not isinstance(self.raw, str) and self.filename is not None and self.code == camera_thread.COMPLETE:
       fp = open(mountPoint + self.filename, 'w')
       fp.write(self.raw)
       fp.close()
