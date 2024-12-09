@@ -10,10 +10,11 @@ from kivy.uix.widget import Widget
 from kivy.core.window import Window
 from kivy.graphics.transformation import Matrix
 import camera_thread, stick, camera_chdk, camera_gphoto, preview, errorlog, preview_thread
+import shutil
 import os, json, string, re, traceback, errno
 import wiringpi
 
-version = '1.5'
+version = '1.6'
 debug = False
 
 odd = None
@@ -57,7 +58,7 @@ class CameraSide:
     # Set the filename we will later save to using .jpg for CHDK cameras
     self.filename = newFilename + '.jpg'
     self.scan = None
-    self.code = camera_thread.WAITING 
+    self.code = camera_thread.WAITING
     self.message = 'Lost Connection to Camera'
     # Pass in a .jpg-less filename for gphoto cameras because they add
     # on .jpg automatically.
@@ -168,7 +169,7 @@ def configureSides():
     swapSides()
   else:
     updateConfig()
-  
+
 #########################################################################################
 
 def swapSides():
@@ -305,7 +306,7 @@ class OptionSelect(RelativeLayout):
 
   def done(self):
     try:
-      odd.config[self.key] = self.oddControl.get() 
+      odd.config[self.key] = self.oddControl.get()
       even.config[self.key] = self.evenControl.get()
       odd.saveConfig(config)
       even.saveConfig(config)
@@ -443,31 +444,16 @@ class StartScreen(Screen):
 
 class ConfigureDiskScreen(Screen):
   waitCount = NumericProperty(0.0)
+  ssh_started = False
 
   def update(self, dt):
-    sticks = stick.search()
-    if len(sticks) == 0:
-      self.diskStatus.text = '[color=ff3333]No Storage Found.[/color] Insert removable storage to continue (USB drive or SD card).'
-      self.diskNext.disabled = True
-      self.spinner.opacity = 1.0
-    elif len(sticks) == 1:
-      mountPoint = sticks[0].get_mount_point()
-      #self.manager.mountPoint = string.strip(.encode('ascii'), '\0')
-      if mountPoint is None:
-        mountPoint = sticks[0].mount()
-      #self.manager.mountPoint = 'test'
-      if mountPoint is None:
-        self.manager.mountPoint = None
-        self.diskStatus.text = 'Could not mount drive. Try removing and re-inserting it.'
-        self.diskNext.disabled = True
-        self.spinner.opacity = 1.0
-        self.upgradeButton.opacity = 0.0
-        self.upgradeButton.disabled = True
-      else:
-        self.manager.mountPoint = string.strip(mountPoint.encode('ascii'), '\0')
+      # Use sftp instead of USB drive
+      if self.ssh_started:
+        mountPoint = 'captured'
+        self.manager.mountPoint = mountPoint
         failMessage = self.makeDirs()
         if failMessage is None:
-          self.diskStatus.text = 'Storage Found. Click next to continue.'
+          self.diskStatus.text = 'Using ssh with "/home/pi/pi-scan/captured" folder for storage. Click Next to continue.'
           self.diskNext.disabled = False
           self.spinner.opacity = 0.0
           if self.getUpgrade() is not None:
@@ -482,18 +468,75 @@ class ConfigureDiskScreen(Screen):
           self.spinner.opacity = 1.0
           self.upgradeButton.opacity = 0.0
           self.upgradeButton.disabled = True
-    else:
-      self.diskStatus.text = '[color=ff3333]Multiple Drives Found.[/color] Disconnect all but one drive to continue.'
-      self.diskNext.disabled = True
-      self.spinner.opacity = 1.0
-      self.upgradeButton.opacity = 0.0
-      self.upgradeButton.disabled = True
+
+      else:
+        sticks = stick.search()
+        if len(sticks) == 0:
+          self.diskStatus.text = '[color=ff3333]No Storage Found.[/color] Insert removable storage to continue (USB drive or SD card).'
+          self.diskNext.disabled = True
+          self.spinner.opacity = 1.0
+        elif len(sticks) == 1:
+          mountPoint = sticks[0].get_mount_point()
+          #self.manager.mountPoint = string.strip(.encode('ascii'), '\0')
+          if mountPoint is None:
+            mountPoint = sticks[0].mount()
+
+          if mountPoint is None:
+            self.manager.mountPoint = None
+            self.diskStatus.text = 'Could not mount drive. Try removing and re-inserting it.'
+            self.diskNext.disabled = True
+            self.spinner.opacity = 1.0
+            self.upgradeButton.opacity = 0.0
+            self.upgradeButton.disabled = True
+          else:
+            self.manager.mountPoint = string.strip(mountPoint.encode('ascii'), '\0')
+            failMessage = self.makeDirs()
+            if failMessage is None:
+              self.diskStatus.text = 'Storage Found. Click next to continue.'
+              self.diskNext.disabled = False
+              self.spinner.opacity = 0.0
+              if self.getUpgrade() is not None:
+                self.upgradeButton.opacity = 1.0
+                self.upgradeButton.disabled = False
+              else:
+                self.upgradeButton.opacity = 0.0
+                self.upgradeButton.disabled = True
+            else:
+              self.diskStatus.text = 'Storage Error: ' + failMessage
+              self.diskNext.disabled = True
+              self.spinner.opacity = 1.0
+              self.upgradeButton.opacity = 0.0
+              self.upgradeButton.disabled = True
+        else:
+          self.diskStatus.text = '[color=ff3333]Multiple Drives Found.[/color] Disconnect all but one drive to continue.'
+          self.diskNext.disabled = True
+          self.spinner.opacity = 1.0
+          self.upgradeButton.opacity = 0.0
+          self.upgradeButton.disabled = True
 
   def keyPress(self, key):
     handleKeyPress(key,
                    { '1': self.diskNextAction,
                      '9': self.backAction,
-                     '2': self.upgradeAction })
+                     '2': self.upgradeAction,
+                     'd': self.deleteFolders,
+                     's': self.startSsh })
+
+  def startSsh(self):
+      os.system('sudo systemctl start ssh')
+      print('ssh started')
+      self.ssh_started = True
+
+  def deleteFolders(self):
+    if self.ssh_started:
+      try:
+        print('Cleaning folders', self.manager.mountPoint)
+        shutil.rmtree(self.manager.mountPoint,
+                  ignore_errors=False)
+      except Exception as e:
+        print ("Unable to delete folders: ", e)
+    else:
+        print('ssh not started')
 
   def on_pre_enter(self):
     try:
@@ -507,7 +550,7 @@ class ConfigureDiskScreen(Screen):
   def makeDirs(self):
     errorMessage = None
     try:
-      os.mkdir(self.manager.mountPoint + '/debug')
+      os.makedirs(self.manager.mountPoint + '/debug')
     except OSError as e:
       errorMessage = self.makeDirError(e)
     if errorMessage is None:
@@ -620,7 +663,7 @@ class ConfigureCameraScreen(Screen):
       self.zoomButton.opacity = 1.0
       self.shutterButton.opacity = 1.0
       self.debugButton.opacity = 1.0
-        
+
   def keyPress(self, key):
     handleKeyPress(key,
                    { '1': self.nextAction,
@@ -789,7 +832,7 @@ class PreviewInside(GridLayout):
 #########################################################################################
 
 class FocusCameraScreen(Screen):
-  
+
   def update(self, dt):
     checkForDisconnected(self.manager)
     if gphoto:
@@ -920,7 +963,7 @@ class CaptureWaitScreen(Screen):
                    { '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
 class PreviewWaitScreen(Screen):
 
@@ -955,13 +998,13 @@ class PreviewWaitScreen(Screen):
                    { '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
 #########################################################################################
 
 class ZoomCameraScreen(Screen):
   preview = ObjectProperty(None, noneallowed=True)
-  
+
   def update(self, dt):
     self.select.update(dt)
 
@@ -1170,7 +1213,7 @@ class CaptureFailScreen(Screen):
                      '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
 #########################################################################################
 
@@ -1196,7 +1239,7 @@ class DebugScreen(Screen):
                      '0': self.restartAction })
 
   def restartAction(self):
-    os.system('killall python')    
+    os.system('killall python')
 
   def updateSide(self, found, side, status, log, message):
     if found:
@@ -1260,7 +1303,7 @@ class DebugScreen(Screen):
       side.message = 'Debug log saved to ' + side.position + '-rom.log'
     except Exception as e:
       side.message = 'Could not get debug log: ' + side.camera.message + ': ' + str(e)
-    
+
 #########################################################################################
 
 hasCrashed = False
@@ -1335,7 +1378,7 @@ class ScanApp(App):
     except Exception as e:
       handleCrash(e)
     return True
-    
+
   def on_key_down(self, window, scancode, codepoint, key, other):
     if not self.handlingKey:
       self.handlingKey = True
@@ -1369,4 +1412,4 @@ if __name__ == '__main__':
   odd.start()
   even.start()
   ScanApp().run()
-    
+
