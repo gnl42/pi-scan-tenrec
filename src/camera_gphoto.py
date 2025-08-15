@@ -58,9 +58,7 @@ def search():
   result = []
   try:
     cameraList = subprocess.run(['gphoto2', '--auto-detect'],
-                                capture_output=True, text=True)
-    if cameraList.returncode != 0:
-      raise CalledProcessError(cameraList.returncode, cameraList.args)
+                                capture_output=True, text=True, check=True)
 
     result = parseCameras(cameraList.stdout)
   except Exception as e:
@@ -272,9 +270,7 @@ def getConfig(usb_port, key):
   raw = subprocess.run(['gphoto2',
                             '--port=' + usb_port,
                             '--get-config=' + key],
-                            capture_output=True, text=True)
-  if raw.returncode != 0:
-      raise CalledProcessError(raw.returncode, raw.args)
+                            capture_output=True, text=True, check=True)
 
   test = re.compile('Current: ([^\n]+)')
   match = test.search(raw.stdout)
@@ -287,9 +283,7 @@ def setConfig(usb_port, key, value):
   raw = subprocess.run(['gphoto2',
                             '--port=' + usb_port,
                             '--set-config=' + key + '=' + value],
-                            capture_output=True, text=True)
-  if raw.returncode != 0:
-      raise CalledProcessError(raw.returncode, raw.args)
+                            capture_output=True, text=True, check=True)
   return None
 
 def captureAndDownload(usb_port, key):
@@ -299,6 +293,4 @@ def captureAndDownload(usb_port, key):
                             '--no-keep',
                             '--force-overwrite',
                             '--filename=' + key + '.%C'],
-                            capture_output=True, text=True)
-  if raw.returncode != 0:
-      raise CalledProcessError(raw.returncode, raw.args)
+                            capture_output=True, text=True, check=True)

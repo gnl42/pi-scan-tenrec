@@ -1050,8 +1050,12 @@ class CaptureScreen(Screen):
     handleKeyPress(key,
                    { '1': self.showPreview,
                      '3': self.rescan,
-                     '5': self.done, })
+                     '5': self.done,
+                     'r': self.resetPageNr, })
     self.preview.keyPress(key)
+
+  def resetPageNr(self):
+      self.nextEvenPage = 0
 
   def on_pre_leave(self):
     self.isCapturing = True
